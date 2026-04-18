@@ -10,16 +10,22 @@ class ImportError(Exception):
     pass
 
 
-def import_dotenv_file(project: str, filepath: str, password: str) -> int:
-    """Read a .env file, validate it, and store it encrypted.
-
-    Returns the number of key/value pairs imported.
-    """
+def _validate_path(filepath: str) -> Path:
+    """Validate that the given filepath exists and is a regular file."""
     path = Path(filepath)
     if not path.exists():
         raise ImportError(f"File not found: {filepath}")
     if not path.is_file():
         raise ImportError(f"Not a file: {filepath}")
+    return path
+
+
+def import_dotenv_file(project: str, filepath: str, password: str) -> int:
+    """Read a .env file, validate it, and store it encrypted.
+
+    Returns the number of key/value pairs imported.
+    """
+    path = _validate_path(filepath)
 
     raw = path.read_text(encoding="utf-8")
     try:
