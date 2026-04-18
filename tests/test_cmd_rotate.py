@@ -18,6 +18,16 @@ def _make_args(project=None):
     return ns
 
 
+def _mock_passwords(current, new, confirm):
+    """Return a getpass mock that maps prompt strings to passwords."""
+    mapping = {
+        "Current password: ": current,
+        "New password: ": new,
+        "Confirm new password: ": confirm,
+    }
+    return lambda prompt: mapping.get(prompt, "")
+
+
 def test_register_rotate_parser():
     parser = argparse.ArgumentParser()
     subs = parser.add_subparsers()
@@ -36,7 +46,7 @@ def test_register_rotate_parser_no_project():
 
 def test_cmd_rotate_single_project(monkeypatch, capsys):
     store_env("proj", "K=V", "old")
-    monkeypatch.setattr("getpass.getpass", lambda _: {"Current password: ": "old", "New password: ": "new", "Confirm new password: ": "new"}.get(_, "new"))
+    monkeypatch.setattr("getpass.getpass", _mock_passwords("old", "new", "new"))
     cmd_rotate(_make_args(project="proj"))
     out = capsys.readouterr().out
     assert "proj" in out
@@ -53,6 +63,6 @@ def test_cmd_rotate_password_mismatch_exits(monkeypatch):
 
 def test_cmd_rotate_wrong_password_exits(monkeypatch):
     store_env("proj", "K=V", "correct")
-    monkeypatch.setattr("getpass.getpass", lambda _: {"Current password: ": "wrong", "New password: ": "new", "Confirm new password: ": "new"}.get(_, "new"))
+    monkeypatch.setattr("getpass.getpass", _mock_passwords("wrong", "new", "new"))
     with pytest.raises(SystemExit):
         cmd_rotate(_make_args(project="proj"))
