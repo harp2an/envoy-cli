@@ -17,18 +17,24 @@ class SyncError(Exception):
     pass
 
 
-def push_env(project: str, password: str, remote_url: Optional[str] = None) -> str:
-    """Encrypt and push an env to the remote store. Returns remote URL."""
+def _build_url(remote_url: Optional[str], path: str) -> str:
+    """Resolve the remote URL and append a path segment."""
     url = remote_url or DEFAULT_REMOTE_URL
     if not url:
         raise SyncError("No remote URL configured. Set ENVOY_REMOTE_URL or pass --remote.")
+    return f"{url.rstrip('/')}/{path.lstrip('/')}"
+
+
+def push_env(project: str, password: str, remote_url: Optional[str] = None) -> str:
+    """Encrypt and push an env to the remote store. Returns remote URL."""
+    endpoint = _build_url(remote_url, f"/envs/{project}")
 
     plaintext = load_env(project, password)
     ciphertext = encrypt(plaintext, password)
 
     payload = json.dumps({"project": project, "data": ciphertext}).encode()
     req = urllib.request.Request(
-        f"{url.rstrip('/')}/envs/{project}",
+        endpoint,
         data=payload,
         method="PUT",
         headers={"Content-Type": "application/json"},
@@ -40,19 +46,14 @@ def push_env(project: str, password: str, remote_url: Optional[str] = None) -> s
     except urllib.error.URLError as exc:
         raise SyncError(f"Failed to push env: {exc}") from exc
 
-    return f"{url.rstrip('/')}/envs/{project}"
+    return endpoint
 
 
 def pull_env(project: str, password: str, remote_url: Optional[str] = None) -> None:
     """Pull and decrypt an env from the remote store, saving it locally."""
-    url = remote_url or DEFAULT_REMOTE_URL
-    if not url:
-        raise SyncError("No remote URL configured. Set ENVOY_REMOTE_URL or pass --remote.")
+    endpoint = _build_url(remote_url, f"/envs/{project}")
 
-    req = urllib.request.Request(
-        f"{url.rstrip('/')}/envs/{project}",
-        method="GET",
-    )
+    req = urllib.request.Request(endpoint, method="GET")
     try:
         with urllib.request.urlopen(req) as resp:
             body = json.loads(resp.read().decode())
@@ -69,11 +70,9 @@ def pull_env(project: str, password: str, remote_url: Optional[str] = None) -> N
 
 def list_remote_projects(remote_url: Optional[str] = None) -> list:
     """List projects available on the remote store."""
-    url = remote_url or DEFAULT_REMOTE_URL
-    if not url:
-        raise SyncError("No remote URL configured.")
+    endpoint = _build_url(remote_url, "/envs")
 
-    req = urllib.request.Request(f"{url.rstrip('/')}/envs", method="GET")
+    req = urllib.request.Request(endpoint, method="GET")
     try:
         with urllib.request.urlopen(req) as resp:
             body = json.loads(resp.read().decode())
