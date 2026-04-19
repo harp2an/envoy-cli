@@ -24,10 +24,18 @@ def import_dotenv_file(project: str, filepath: str, password: str) -> int:
     """Read a .env file, validate it, and store it encrypted.
 
     Returns the number of key/value pairs imported.
+
+    Raises:
+        ImportError: If the file does not exist, is not a regular file,
+            or cannot be parsed as a valid .env file.
     """
     path = _validate_path(filepath)
 
-    raw = path.read_text(encoding="utf-8")
+    try:
+        raw = path.read_text(encoding="utf-8")
+    except OSError as exc:
+        raise ImportError(f"Could not read file: {exc}") from exc
+
     try:
         pairs = parse_dotenv(raw)
     except ExportError as exc:
