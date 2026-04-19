@@ -70,5 +70,13 @@ def test_project_lock_context_manager(isolated_store):
     assert not is_locked("proj")
 
 
+def test_project_lock_releases_on_exception(isolated_store):
+    """Ensure ProjectLock releases the lock even when an exception is raised."""
+    with pytest.raises(ValueError):
+        with ProjectLock("proj"):
+            raise ValueError("something went wrong")
+    assert not is_locked("proj")
+
+
 def test_release_nonexistent_lock_is_noop(isolated_store):
     release_lock("ghost")  # should not raise
