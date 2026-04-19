@@ -66,3 +66,12 @@ def test_cmd_rotate_wrong_password_exits(monkeypatch):
     monkeypatch.setattr("getpass.getpass", _mock_passwords("wrong", "new", "new"))
     with pytest.raises(SystemExit):
         cmd_rotate(_make_args(project="proj"))
+
+
+def test_cmd_rotate_preserves_env_contents(monkeypatch):
+    """Ensure all env vars are intact after rotation, not just the first."""
+    original = "A=1\nB=2\nC=3"
+    store_env("proj", original, "old")
+    monkeypatch.setattr("getpass.getpass", _mock_passwords("old", "new", "new"))
+    cmd_rotate(_make_args(project="proj"))
+    assert load_env("proj", "new") == original
