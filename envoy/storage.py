@@ -76,6 +76,17 @@ def delete_env(project: str) -> bool:
     return True
 
 
+def get_project_info(project: str) -> Optional[dict]:
+    """Return metadata for a stored project, or None if not found.
+
+    The returned dict contains:
+      - ``file``: absolute path to the encrypted env file
+      - ``updated_at``: ISO-8601 timestamp of the last update
+    """
+    manifest = load_manifest()
+    return manifest.get(project)
+
+
 def _now_iso() -> str:
     from datetime import datetime, timezone
     return datetime.now(timezone.utc).isoformat()
