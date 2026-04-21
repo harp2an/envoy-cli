@@ -21,7 +21,10 @@ def _load_pins() -> dict:
     p = _pin_path()
     if not p.exists():
         return {}
-    return json.loads(p.read_text())
+    try:
+        return json.loads(p.read_text())
+    except json.JSONDecodeError as exc:
+        raise PinError(f"Pin file is corrupt and could not be parsed: {exc}") from exc
 
 
 def _save_pins(pins: dict) -> None:
