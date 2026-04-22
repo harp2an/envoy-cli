@@ -26,6 +26,14 @@ class LintResult:
     def ok(self) -> bool:
         return len(self.issues) == 0
 
+    def errors(self) -> List[LintIssue]:
+        """Return only issues with error-level codes (Exxx)."""
+        return [i for i in self.issues if i.code.startswith("E")]
+
+    def warnings(self) -> List[LintIssue]:
+        """Return only issues with warning-level codes (Wxxx)."""
+        return [i for i in self.issues if i.code.startswith("W")]
+
 
 def lint_content(content: str) -> LintResult:
     result = LintResult()
