@@ -33,6 +33,12 @@ def test_add_dependency_missing_project_raises(isolated_store):
         add_dependency("alpha", "nonexistent", store_dir=isolated_store)
 
 
+def test_add_dependency_missing_source_raises(isolated_store):
+    """Adding a dependency from a non-existent source project should also raise."""
+    with pytest.raises(DependencyError, match="not found"):
+        add_dependency("nonexistent", "beta", store_dir=isolated_store)
+
+
 def test_add_dependency_self_raises(isolated_store):
     with pytest.raises(DependencyError, match="itself"):
         add_dependency("alpha", "alpha", store_dir=isolated_store)
