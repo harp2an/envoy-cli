@@ -59,3 +59,22 @@ def get_pin(project: str) -> str | None:
 def list_pins() -> dict:
     """Return all pinned projects as {project: label}."""
     return _load_pins()
+
+
+def rename_project(old_name: str, new_name: str) -> None:
+    """Rename a pinned project entry from *old_name* to *new_name*.
+
+    Raises PinError if *old_name* is not currently pinned, or if *new_name*
+    is already in use.
+    """
+    if not old_name:
+        raise PinError("Old project name must not be empty.")
+    if not new_name:
+        raise PinError("New project name must not be empty.")
+    pins = _load_pins()
+    if old_name not in pins:
+        raise PinError(f"Project '{old_name}' is not pinned.")
+    if new_name in pins:
+        raise PinError(f"Project '{new_name}' is already pinned.")
+    pins[new_name] = pins.pop(old_name)
+    _save_pins(pins)
