@@ -27,6 +27,11 @@ def _save_profiles(store_dir: Path, data: Dict[str, Dict[str, str]]) -> None:
     _profile_path(store_dir).write_text(json.dumps(data, indent=2))
 
 
+def _profile_key(project: str, profile: str) -> str:
+    """Return the storage key for a project/profile pair."""
+    return f"{project}:{profile}"
+
+
 def set_profile(project: str, profile: str, overrides: Dict[str, str],
                store_dir: Optional[Path] = None) -> None:
     """Create or replace a named profile for *project*."""
@@ -37,8 +42,7 @@ def set_profile(project: str, profile: str, overrides: Dict[str, str],
     if not profile:
         raise ProfileError("Profile name must not be empty")
     data = _load_profiles(store_dir)
-    key = f"{project}:{profile}"
-    data[key] = overrides
+    data[_profile_key(project, profile)] = overrides
     _save_profiles(store_dir, data)
 
 
@@ -47,7 +51,7 @@ def get_profile(project: str, profile: str,
     """Return overrides for *profile* of *project*, or None if absent."""
     store_dir = store_dir or get_store_dir()
     data = _load_profiles(store_dir)
-    return data.get(f"{project}:{profile}")
+    return data.get(_profile_key(project, profile))
 
 
 def remove_profile(project: str, profile: str,
@@ -55,7 +59,7 @@ def remove_profile(project: str, profile: str,
     """Delete a named profile; raises ProfileError if it does not exist."""
     store_dir = store_dir or get_store_dir()
     data = _load_profiles(store_dir)
-    key = f"{project}:{profile}"
+    key = _profile_key(project, profile)
     if key not in data:
         raise ProfileError(f"Profile '{profile}' not found for project '{project}'")
     del data[key]
