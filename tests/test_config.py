@@ -55,3 +55,19 @@ def test_existing_file_merged_with_defaults(isolated_config):
     config = cfg.load_config()
     assert config["remote_url"] == "http://stored.com"
     assert config["default_project"] is None
+
+
+def test_set_config_value_persists_to_disk(isolated_config):
+    """Ensure set_config_value writes the value to the config file on disk."""
+    cfg.set_config_value("store_dir", "/tmp/envoy-store")
+    raw = json.loads(isolated_config.read_text())
+    assert raw["store_dir"] == "/tmp/envoy-store"
+
+
+def test_set_multiple_values_all_persisted(isolated_config):
+    """Ensure multiple set_config_value calls accumulate on disk."""
+    cfg.set_config_value("remote_url", "https://example.com")
+    cfg.set_config_value("default_project", "myapp")
+    raw = json.loads(isolated_config.read_text())
+    assert raw["remote_url"] == "https://example.com"
+    assert raw["default_project"] == "myapp"
