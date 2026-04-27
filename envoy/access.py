@@ -46,6 +46,8 @@ def grant_access(project: str, identity: str, permission: str, store_dir: Option
 
 def revoke_access(project: str, identity: str, permission: str, store_dir: Optional[Path] = None) -> None:
     """Revoke *permission* from *identity* on *project*."""
+    if permission not in VALID_PERMS:
+        raise AccessError(f"Invalid permission '{permission}'. Choose from: {sorted(VALID_PERMS)}")
     data = _load_access(store_dir)
     try:
         perms = data[project][identity]
